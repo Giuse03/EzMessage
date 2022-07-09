@@ -1,0 +1,4 @@
+name: EzMessage
+version: '${project.version}'
+main: net.giuse.ezmessage.EzMessage
+api-version: 1.19
