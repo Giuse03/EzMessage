@@ -38,7 +38,7 @@ public class MessageBuilder {
      */
     @SneakyThrows
     public void sendMessage(TextReplacer... textReplacers) {
-            messageLoader.getCache().getIfPresent(idMessage+string).whenCompleteAsync(((message, throwable) -> {
+            messageLoader.getCache().getIfPresent(idMessage).whenCompleteAsync(((message, throwable) -> {
                 switch (message.getMessageType()) {
                     //SEND CHAT
                     case CHAT:
