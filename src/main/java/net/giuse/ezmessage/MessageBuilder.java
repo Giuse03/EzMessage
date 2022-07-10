@@ -3,7 +3,6 @@ package net.giuse.ezmessage;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import net.giuse.ezmessage.interfaces.MessageLoader;
 import net.giuse.ezmessage.messages.MessageActionbar;
 import net.giuse.ezmessage.messages.MessageChat;
 import net.giuse.ezmessage.messages.MessageTitle;
@@ -35,69 +34,71 @@ public class MessageBuilder {
     }
 
     /*
-     * Send Message with replaces, regex split ===
+     * Send Message with replaces
      */
     @SneakyThrows
-    public void sendMessage(String... replace) {
-        messageLoader.getCache().getIfPresent(idMessage).whenCompleteAsync(((message, throwable) -> {
-            switch (message.getMessageType()) {
-                //SEND CHAT
-                case CHAT:
-                    MessageChat messageChat = (MessageChat) message;
-                    String messageToReplace = messageChat.getMessageChat();
-                    if (replace.length == 0) {
-                        messageLoader.sendChat(commandSender, Component.text(messageToReplace));
-                        break;
-                    }
-                    for (String args : replace) {
-                        String[] arg = args.split("===");
-                        messageToReplace = messageToReplace.replace(arg[0], arg[1]);
-                    }
-                    Component newComponentReplacedText = Component.text(messageToReplace);
-                    messageLoader.sendChat(commandSender, newComponentReplacedText);
-                    break;
-
-                //Send Action Bar
-                case ACTION_BAR:
-                    if (commandSender instanceof Player) {
-                        MessageActionbar messageActionbar = (MessageActionbar) message;
-                        String placeHolder = messageActionbar.getMessageBar();
-                        if (replace.length == 0) {
-                            messageLoader.sendActionBar((Player) commandSender, Component.text(placeHolder));
+    public void sendMessage(TextReplacer... textReplacers) {
+        for (String string : new String[]{"_chat", "_bossbar", "_title"}) {
+            messageLoader.getCache().getIfPresent(idMessage+string).whenCompleteAsync(((message, throwable) -> {
+                switch (message.getMessageType()) {
+                    //SEND CHAT
+                    case CHAT:
+                        MessageChat messageChat = (MessageChat) message;
+                        String messageToReplace = messageChat.getMessageChat();
+                        if (textReplacers.length == 0) {
+                            messageLoader.sendChat(commandSender, Component.text(messageToReplace));
                             break;
                         }
-                        for (String args : replace) {
-                            String[] arg = args.split("===");
-                            placeHolder = placeHolder.replace(arg[0], arg[1]);
+                        for (TextReplacer textReplacer : textReplacers) {
+                            messageToReplace = textReplacer.setText(messageToReplace).returnReplace();
                         }
-                        Component newComponentReplaced = Component.text(placeHolder);
-                        messageLoader.sendActionBar((Player) commandSender, newComponentReplaced);
+                        Component newComponentReplacedText = Component.text(messageToReplace);
+                        messageLoader.sendChat(commandSender, newComponentReplacedText);
                         break;
-                    }
-                    //Send Title
-                case TITLE:
-                    if (commandSender instanceof Player) {
-                        MessageTitle messageTitle = (MessageTitle) message;
-                        String title = messageTitle.getTitle();
-                        String subTitle = messageTitle.getSubTitle();
-                        if (replace.length == 0) {
+
+                    //Send Action Bar
+                    case ACTION_BAR:
+                        if (commandSender instanceof Player) {
+                            MessageActionbar messageActionbar = (MessageActionbar) message;
+                            String placeHolder = messageActionbar.getMessageBar();
+                            if (textReplacers.length == 0) {
+                                messageLoader.sendActionBar((Player) commandSender, Component.text(placeHolder));
+                                break;
+                            }
+
+                            for (TextReplacer textReplacer : textReplacers) {
+                                placeHolder = textReplacer.setText(placeHolder).returnReplace();
+                            }
+                            Component newComponentReplaced = Component.text(placeHolder);
+                            messageLoader.sendActionBar((Player) commandSender, newComponentReplaced);
+                            break;
+                        }
+                        //Send Title
+                    case TITLE:
+                        if (commandSender instanceof Player) {
+                            MessageTitle messageTitle = (MessageTitle) message;
+                            String title = messageTitle.getTitle();
+                            String subTitle = messageTitle.getSubTitle();
+                            if (textReplacers.length == 0) {
+                                TextComponent newTitleComponent = Component.text(title);
+                                TextComponent newSubTitleComponent = Component.text(subTitle);
+                                messageLoader.sendTitle((Player) commandSender, newTitleComponent, newSubTitleComponent, messageTitle.getFadeIn(), messageTitle.getStay(), messageTitle.getFadeOut());
+                                break;
+                            }
+
+                            for (TextReplacer textReplacer : textReplacers) {
+                                title = textReplacer.setText(title).returnReplace();
+                                subTitle = textReplacer.setText(subTitle).returnReplace();
+
+                            }
                             TextComponent newTitleComponent = Component.text(title);
                             TextComponent newSubTitleComponent = Component.text(subTitle);
                             messageLoader.sendTitle((Player) commandSender, newTitleComponent, newSubTitleComponent, messageTitle.getFadeIn(), messageTitle.getStay(), messageTitle.getFadeOut());
-                            break;
                         }
-                        for (String args : replace) {
-                            String[] arg = args.split("===");
-                            title = title.replace(arg[0], arg[1]);
-                            subTitle = subTitle.replace(arg[0], arg[1]);
-                        }
-                        TextComponent newTitleComponent = Component.text(title);
-                        TextComponent newSubTitleComponent = Component.text(subTitle);
-                        messageLoader.sendTitle((Player) commandSender, newTitleComponent, newSubTitleComponent, messageTitle.getFadeIn(), messageTitle.getStay(), messageTitle.getFadeOut());
-                    }
-            }
-        }));
+                }
+            }));
 
+        }
     }
 
 }
