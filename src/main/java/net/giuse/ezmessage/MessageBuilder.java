@@ -38,7 +38,6 @@ public class MessageBuilder {
      */
     @SneakyThrows
     public void sendMessage(TextReplacer... textReplacers) {
-        for (String string : new String[]{"_chat", "_bossbar", "_title"}) {
             messageLoader.getCache().getIfPresent(idMessage+string).whenCompleteAsync(((message, throwable) -> {
                 switch (message.getMessageType()) {
                     //SEND CHAT
@@ -98,7 +97,7 @@ public class MessageBuilder {
                 }
             }));
 
-        }
+     
     }
 
 }
